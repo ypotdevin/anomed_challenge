@@ -130,3 +130,46 @@ TODO
 ### Dataset Synthesis Challenge with ??? Threat Model
 
 TODO
+
+## How To Create Challenges Without Template
+
+In case your challenge is not covered by one of the available templates, we
+suggest that you also use the Falcon web framework and make use of at least some
+of the available resource building blocks. Besides that, you should pay
+attention to the following principles when implementing your challenge:
+
+- Challenges and submissions will not get any internet access when running at
+  tha AnoMed platform. Make your challenge self-containing.
+- Platform users will not get access to challenge data - only submission
+  containers (but not their creators) may access them. That means submission
+  contributors have to create their model blueprints »blindly« and are not able
+  to have a look into the data when hyperparameter tuning. To make life a little
+  easier, we suggest to provide dummy data of the same type and shape as the
+  challenge – but with innocuous content M outside of the platform. You may post
+  a hyperlink to it from within your challenge description.
+- Explain your API well in the challenge description, such that custom
+  submissions have it easy to obey your API. [Template
+  anonymizers](https://github.com/ypotdevin/anomed_anonymizer) and [template
+  deanonymizers](https://github.com/ypotdevin/anomed_deanonymizer) are likely
+  incompatible with your custom challenge.
+- Provide a default route `/` which returns a JSON encoded message like
+  "Challenge server is alive!" for diagnosis upon GET request.
+- Challenge data used to fit and evaluate anonymizers or deanonymizers should be
+  the same for each submission, to allow for a fair comparison.
+- Evaluation data should be disjoint from training data.
+- Utility and privacy metrics should be floating point scalars, to allow for
+  plotting and ranking. Vectors or even more complex statistics are not suitable
+  for that. Also, they should be clearly defined and fixed before the first
+  submission comes in. It should not be changed retroactively.
+- There should be a way to gain intermediate evaluation results for
+  hyperparameter tuning (e.g. with respect to tuning data, if there is any). The
+  final evaluation however should be accessed only once by each submission, to
+  limit validation data leakage. Such further requests should be rejected.
+- Try to find a good compromise between required network capacity and ease of
+  use, when sending data via web to submissions. For example, when sending raw
+  NumPy arrays over wire, or even plain JSON, no compression is used and usually
+  the required network capacity is large. Compressed files on the other hand
+  might require further processing in downstream tasks. In the supervised
+  learning scenario above for example, we used compressed streams of NumPy
+  arrays and [utility functions](https://github.com/ypotdevin/anomed_utils) to
+  make working with them comfortable.
