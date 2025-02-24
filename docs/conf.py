@@ -1,3 +1,5 @@
+import os
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -22,9 +24,11 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
+
+autosummary_generate = True
