@@ -21,6 +21,14 @@ import requests
 from . import challenge
 from .challenge import NumpyDataset
 
+__all__ = [
+    "DynamicNumpyDataResource",
+    "StaticJSONResource",
+    "StaticNumpyDataResource",
+    "UtilityResource",
+    "supervised_learning_MIA_challenge_server_factory",
+]
+
 
 class StaticJSONResource:
     """Any JSON serializable object, representing a "static" resource (i.e. a

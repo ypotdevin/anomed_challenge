@@ -11,6 +11,17 @@ from typing import Callable, Literal
 import anomed_utils as utils
 import numpy as np
 
+__all__ = [
+    "InMemoryNumpyArrays",
+    "NpzFromDisk",
+    "NumpyDataset",
+    "SupervisedLearningMIAChallenge",
+    "discard_targets",
+    "evaluate_membership_inference_attack",
+    "evaluate_MIA",
+    "strict_binary_accuracy",
+]
+
 _logger = logging.getLogger(__name__)
 
 
@@ -100,10 +111,18 @@ class InMemoryNumpyArrays(NumpyDataset):
     memory."""
 
     def __init__(self, X: np.ndarray, y: np.ndarray):
+        """
+        Parameters
+        ----------
+        X : np.ndarray
+            The feature array.
+        y : np.ndarray
+            The target array.
+        """
         self._X = X
         self._y = y
 
-    def get(self):
+    def get(self) -> tuple[np.ndarray, np.ndarray]:
         return (self._X, self._y)
 
 
@@ -523,7 +542,9 @@ def strict_binary_accuracy(
     the ground truth.
 
     By strict accuracy, we mean the fraction of the number of times where
+
         `prediction[i] == ground_truth[i]`,
+
     for `0 <= i < len(prediction)` is `True`, divided by `len(prediction)`. Note
     this is not the same as `sum(prediction==ground_truth)`, which is more
     forgiving for higher dimensional arrays (for one-dimensional arrays, it is
