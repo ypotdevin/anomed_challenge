@@ -1,6 +1,6 @@
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
 # AnoMed Challenge
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A library aiding to create challenge web servers for the AnoMed competition
 platform.
