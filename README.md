@@ -27,7 +27,7 @@ itself, without being annoyed by web server related questions, use this library
 to generate web servers "for free", which integrate well with the AnoMed
 platform.
 
-## How to Create Challenge Web Servers (for selected cases)
+## How to Create Challenge Web Servers (for selected use cases)
 
 If you goal is to create a challenge that fits one of the following selected
 cases, you may use this library's template to create a challenge web server with
@@ -131,29 +131,29 @@ TODO
 
 TODO
 
-## How To Create Challenges Without Template
+## How To Create Challenge Web Servers Without Template
 
 In case your challenge is not covered by one of the available templates, we
 suggest that you also use the Falcon web framework and make use of at least some
 of the available resource building blocks. Besides that, you should pay
 attention to the following principles when implementing your challenge:
 
-- Challenges and submissions will not get any internet access when running at
-  tha AnoMed platform. Make your challenge self-containing.
+- Challenges and submissions will not get any internet access when running on
+  the AnoMed platform. Make your challenge self-containing.
 - Platform users will not get access to challenge data - only submission
   containers (but not their creators) may access them. That means submission
   contributors have to create their model blueprints »blindly« and are not able
   to have a look into the data when hyperparameter tuning. To make life a little
   easier, we suggest to provide dummy data of the same type and shape as the
-  challenge – but with innocuous content M outside of the platform. You may post
-  a hyperlink to it from within your challenge description.
+  challenge – but with innocuous content outside of the platform. You may post a
+  hyperlink to it from within your challenge description.
 - Explain your API well in the challenge description, such that custom
   submissions have it easy to obey your API. [Template
   anonymizers](https://github.com/ypotdevin/anomed_anonymizer) and [template
   deanonymizers](https://github.com/ypotdevin/anomed_deanonymizer) are likely
   incompatible with your custom challenge.
 - Provide a default route `/` which returns a JSON encoded message like
-  "Challenge server is alive!" for diagnosis upon GET request.
+  "Challenge server is alive!" for diagnosis, upon GET request.
 - Challenge data used to fit and evaluate anonymizers or deanonymizers should be
   the same for each submission, to allow for a fair comparison.
 - Evaluation data should be disjoint from training data.

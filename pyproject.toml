@@ -18,6 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
 ]
 
+[project.urls]
+documentation = "https://anomed-challenge.readthedocs.io/en/latest/"
+source = "https://github.com/ypotdevin/anomed_challenge"
+
 [project.optional-dependencies]
 dev = ["anomed-challenge", "ruff~=0.7"]
 test = ["anomed-challenge", "coverage~=7.6", "pytest~=8.3", "pytest-mock~=3.14"]
