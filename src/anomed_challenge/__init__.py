@@ -1,8 +1,10 @@
 from .challenge import (
+    AnonymizationScheme,
     InMemoryNumpyArrays,
     NpzFromDisk,
     NumpyDataset,
     SupervisedLearningMIAChallenge,
+    TabularDataResconstructionChallenge,
     discard_targets,
     evaluate_membership_inference_attack,
     evaluate_MIA,
@@ -17,6 +19,7 @@ from .challenge_server import (
 )
 
 __all__ = [
+    "AnonymizationScheme",
     "discard_targets",
     "DynamicNumpyDataResource",
     "evaluate_membership_inference_attack",
@@ -29,5 +32,6 @@ __all__ = [
     "strict_binary_accuracy",
     "supervised_learning_MIA_challenge_server_factory",
     "SupervisedLearningMIAChallenge",
+    "TabularDataResconstructionChallenge",
     "UtilityResource",
 ]

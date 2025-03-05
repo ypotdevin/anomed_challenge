@@ -13,14 +13,16 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    "InMemoryNumpyArrays",
-    "NpzFromDisk",
-    "NumpyDataset",
-    "SupervisedLearningMIAChallenge",
+    "AnonymizationScheme",
     "discard_targets",
     "evaluate_membership_inference_attack",
     "evaluate_MIA",
+    "InMemoryNumpyArrays",
+    "NpzFromDisk",
+    "NumpyDataset",
     "strict_binary_accuracy",
+    "SupervisedLearningMIAChallenge",
+    "TabularDataResconstructionChallenge",
 ]
 
 _logger = logging.getLogger(__name__)
