@@ -6,10 +6,11 @@ import hashlib
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Callable, Literal, TypeAlias
 
 import anomed_utils as utils
 import numpy as np
+import pandas as pd
 
 __all__ = [
     "InMemoryNumpyArrays",
@@ -642,3 +643,75 @@ def evaluate_MIA(prediction: np.ndarray, ground_truth: np.ndarray) -> dict[str, 
     return evaluate_membership_inference_attack(
         prediction=prediction, ground_truth=ground_truth
     )
+
+
+AnonymizationScheme: TypeAlias = Literal["same", "generalization", "microaggregation"]
+"""What scheme does the anonymized data follow?
+
+- same: Leaky data and anonymized data match regarding shape (columns) and
+  datatype.
+- generalization: Cardinal data will be represented by (min, max) ranges,
+  nominal data will be one-hot encoded.
+- microaggregation: TODO
+"""
+
+
+class TabularDataResconstructionChallenge:
+    """This class represents challenges that aim to protect tabular data via
+    anonymization, while maintaining certain utility. The threat model involves
+    attackers that aim to reconstruct the tabular data from the anonymized data
+    plus background knowledge."""
+
+    def __init__(
+        self,
+        leaky_data: pd.DataFrame,
+        background_knowledge: pd.DataFrame,
+        utility_evaluator: Callable[
+            [pd.DataFrame, AnonymizationScheme, pd.DataFrame], dict[str, float]
+        ],
+        privacy_evaluator: Callable[[pd.DataFrame, pd.DataFrame], dict[str, float]],
+    ):
+        """
+        Parameters
+        ----------
+        leaky_data : pd.Dataframe
+            The original tabular data which should be protected by
+            anonymization.
+        background_knowledge : pd.DataFrame
+            Background knowledge that is accessible by attackers.
+        utility_evaluator : Callable[[pd.DataFrame, AnonymizationScheme, DataFrame], dict[str, float]]
+            How to evaluate the utility of anonymized data, depending of the
+            kind of anonymization. The first argument is the anonymized data,
+            the second argument is the anonymization scheme and the third
+            argument is the original/leaky data for comparison.
+
+            This function parameter is used, when `evaluate_utility` is called.
+        privacy_evaluator : Callable[[pd.DataFrame, pd.DataFrame], dict[str, float]]
+            How to evaluate the quality of reconstructed data, i.e. the success
+            of the attacker. This is also an indirect measure of how privacy
+            preserving the anonymized data (as an attack target) has been.
+            The first argument is the reconstructed data, the second argument
+            the leaky data, which the attack target's anonymized data depends
+            on.
+
+            This function parameter is used, when `evaluate_privacy` is called.
+        """
+        self._leaky_data = leaky_data
+        self._background_knowledge = background_knowledge
+        self._evaluate_utility = utility_evaluator
+        self._evaluate_privacy = privacy_evaluator
+
+    def evaluate_utility(
+        self,
+        anonymized_data: pd.DataFrame,
+        anonymization_scheme: AnonymizationScheme,
+        leaky_data: pd.DataFrame,
+    ) -> dict[str, float]:
+        return self._evaluate_utility(anonymized_data, anonymization_scheme, leaky_data)
+
+    def evaluate_privacy(
+        self,
+        reconstructed_data: pd.DataFrame,
+        leaky_data: pd.DataFrame,
+    ) -> dict[str, float]:
+        return self._evaluate_privacy(reconstructed_data, leaky_data)
