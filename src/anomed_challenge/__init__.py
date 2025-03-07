@@ -4,7 +4,7 @@ from .challenge import (
     NpzFromDisk,
     NumpyDataset,
     SupervisedLearningMIAChallenge,
-    TabularDataResconstructionChallenge,
+    TabularDataReconstructionChallenge,
     discard_targets,
     evaluate_membership_inference_attack,
     evaluate_MIA,
@@ -32,6 +32,6 @@ __all__ = [
     "strict_binary_accuracy",
     "supervised_learning_MIA_challenge_server_factory",
     "SupervisedLearningMIAChallenge",
-    "TabularDataResconstructionChallenge",
+    "TabularDataReconstructionChallenge",
     "UtilityResource",
 ]
