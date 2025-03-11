@@ -698,8 +698,8 @@ class TabularDataReconstructionChallenge:
 
             This function parameter is used, when `evaluate_privacy` is called.
         """
-        self._leaky_data = leaky_data
-        self._background_knowledge = background_knowledge
+        self.leaky_data = leaky_data
+        self.background_knowledge = background_knowledge
         self._evaluate_utility = utility_evaluator
         self._evaluate_privacy = privacy_evaluator
 
