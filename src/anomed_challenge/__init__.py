@@ -11,15 +11,20 @@ from .challenge import (
     strict_binary_accuracy,
 )
 from .challenge_server import (
+    DataReconstructionPrivacyResource,
+    DataReconstructionUtilityResource,
     DynamicNumpyDataResource,
     StaticJSONResource,
     StaticNumpyDataResource,
     UtilityResource,
     supervised_learning_MIA_challenge_server_factory,
+    tabular_data_reconstruction_challenge_server_factory,
 )
 
 __all__ = [
     "AnonymizationScheme",
+    "DataReconstructionPrivacyResource",
+    "DataReconstructionUtilityResource",
     "discard_targets",
     "DynamicNumpyDataResource",
     "evaluate_membership_inference_attack",
@@ -32,6 +37,7 @@ __all__ = [
     "strict_binary_accuracy",
     "supervised_learning_MIA_challenge_server_factory",
     "SupervisedLearningMIAChallenge",
+    "tabular_data_reconstruction_challenge_server_factory",
     "TabularDataReconstructionChallenge",
     "UtilityResource",
 ]

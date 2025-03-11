@@ -16,17 +16,21 @@ from typing import Any, Callable
 import anomed_utils as utils
 import falcon
 import numpy as np
+import pandas as pd
 import requests
 
 from . import challenge
 from .challenge import NumpyDataset
 
 __all__ = [
+    "DataReconstructionPrivacyResource",
+    "DataReconstructionUtilityResource",
     "DynamicNumpyDataResource",
     "StaticJSONResource",
     "StaticNumpyDataResource",
-    "UtilityResource",
     "supervised_learning_MIA_challenge_server_factory",
+    "tabular_data_reconstruction_challenge_server_factory",
+    "UtilityResource",
 ]
 
 
@@ -59,11 +63,11 @@ class StaticNumpyDataResource:
     `anomed_utils.bytes_to_named_ndarrays`. The names of the arrays are 'X' for
     the features and 'y' for the targets."""
 
-    def __init__(self, _data: NumpyDataset) -> None:
-        self.data = _data
+    def __init__(self, data: NumpyDataset) -> None:
+        self._data = data
 
     def on_get(self, _, resp: falcon.Response) -> None:
-        _add_ds_to_resp(self.data, resp)
+        _add_ds_to_resp(self._data, resp)
 
 
 def _add_ds_to_resp(ds: NumpyDataset, resp: falcon.Response) -> None:
@@ -164,12 +168,18 @@ class UtilityResource:
         y = self._evaluation_data_provider(req)
         evaluation = self._evaluator(prediction, y)
         self._submitter(req, evaluation)
-        resp.text = json.dumps(evaluation)
-        resp.status_code = 201
+        _add_evaluation_to_resp(evaluation=evaluation, resp=resp)
 
     def _validate_array_payload(self, array_payload: dict[str, np.ndarray]) -> None:
         if "prediction" not in array_payload:
             raise KeyError("'prediction'")
+
+
+def _add_evaluation_to_resp(
+    evaluation: dict[str, float], resp: falcon.Response, status_code: int = 201
+) -> None:
+    resp.text = json.dumps(evaluation)
+    resp.status_code = status_code
 
 
 def supervised_learning_MIA_challenge_server_factory(
@@ -181,8 +191,7 @@ def supervised_learning_MIA_challenge_server_factory(
 
     By using this factory, you don't have to worry any web-programming issues,
     as they are hidden from you. The generated web app will feature the
-    following routes (more details may be found in this project's openapi
-    specification):
+    following routes:
 
     * [GET] `/`
     * [GET] `/data/anonymizer/training`
@@ -291,3 +300,132 @@ def _demo_deanonymizer_submitter(req, evaluation) -> None:
         "tpr": 0.5,
     }
     requests.post(url=url, json=demo_evaluation)
+
+
+class StaticDataFrameResource:
+    """A static pandas `DataFrame` resource, responding to GET requests.
+
+    The `DataFrame` (features and targets) will be serialized using
+    `anomed_utils.named_ndarrays_to_bytes` and may be de-serialized using
+    `anomed_utils.bytes_to_named_ndarrays`. The names of the arrays are 'X' for
+    the features and 'y' for the targets."""
+
+    def __init__(
+        self,
+        df: pd.DataFrame,
+    ) -> None:
+        self._df = df
+
+    def on_get(self, req: falcon.Request, resp: falcon.Response) -> None:
+        _add_df_to_resp(self._df, resp)
+
+
+def _add_df_to_resp(df: pd.DataFrame, resp: falcon.Response) -> None:
+    resp.data = utils.dataframe_to_bytes(df)
+    resp.content_type = "application/octet-stream"
+
+
+class DataReconstructionUtilityResource:
+    def __init__(
+        self,
+        challenge_obj: challenge.TabularDataReconstructionChallenge,
+        evaluation_submitter: Callable[[falcon.Request, dict[str, float]], None],
+    ) -> None:
+        self._challenge_obj = challenge_obj
+        self._submit_evaluation = evaluation_submitter
+
+    def on_post(self, req: falcon.Request, resp: falcon.Response) -> None:
+        # read anon_data and anon_format from request, evaluate their utility
+        form = req.get_media()
+        anon_data = anon_scheme = None
+        for part in form:
+            if part.name == "anon_data":
+                anon_data = utils.bytes_to_dataframe(part.data)
+            if part.name == "anon_scheme":
+                anon_scheme = part.text
+        utility = self._challenge_obj.evaluate_utility(
+            anonymized_data=anon_data,  # type: ignore
+            anonymization_scheme=anon_scheme,  # type: ignore
+            leaky_data=self._challenge_obj.leaky_data,
+        )
+        self._submit_evaluation(req, utility)
+        _add_evaluation_to_resp(evaluation=utility, resp=resp)
+
+
+class DataReconstructionPrivacyResource:
+    def __init__(
+        self,
+        challenge_obj: challenge.TabularDataReconstructionChallenge,
+        evaluation_submitter: Callable[[falcon.Request, dict[str, float]], None],
+    ) -> None:
+        self._challenge_obj = challenge_obj
+        self._submit_evaluation = evaluation_submitter
+
+    def on_post(self, req: falcon.Request, resp: falcon.Response) -> None:
+        reconstructed_data = _get_df_from_post_req(req)
+        privacy = self._challenge_obj.evaluate_privacy(
+            reconstructed_data, self._challenge_obj.leaky_data
+        )
+        self._submit_evaluation(req, privacy)
+        _add_evaluation_to_resp(evaluation=privacy, resp=resp)
+
+
+def _get_df_from_post_req(req: falcon.Request) -> pd.DataFrame:
+    df = utils.bytes_to_dataframe(req.bounded_stream.read())
+    return df
+
+
+def tabular_data_reconstruction_challenge_server_factory(
+    challenge_obj: challenge.TabularDataReconstructionChallenge,
+) -> falcon.App:
+    """A factory to create a web application object which hosts a
+    `challenge.TabularDataReconstructionChallenge`.
+
+    By using this factory, you don't have to worry any web-programming issues,
+    as they are hidden from you. The generated web app will feature the
+    following routes:
+
+    * [GET] `/`
+    * [GET] `/data/anonymizer/leaky`
+    * [GET] `/data/anonymizer/background-knowledge`
+    * [POST] `/utility/anonymizer`
+    * [POST] `/utility/deanonymizer`
+
+    Parameters
+    ----------
+    challenge_obj : challenge.TabularDataReconstructionChallenge
+        The data reconstruction challenge to lift to a web application.
+
+    Returns
+    -------
+    falcon.App
+        A web application object based on the falcon web framework, which
+        features the supplied `challenge_obj`.
+    """
+    app = falcon.App()
+    app.add_route("/", StaticJSONResource(dict(message="Challenge server is alive!")))
+    app.add_route(
+        "/data/anonymizer/leaky", StaticDataFrameResource(df=challenge_obj.leaky_data)
+    )
+    app.add_route(
+        "/data/deanonymizer/background-knowledge",
+        StaticDataFrameResource(df=challenge_obj.background_knowledge),
+    )
+    app.add_route(
+        "/utility/anonymizer",
+        DataReconstructionUtilityResource(
+            challenge_obj=challenge_obj,
+            # TODO: Change this to a serious submitter
+            evaluation_submitter=_demo_anonymizer_submitter,
+        ),
+    )
+    app.add_route(
+        "/utility/deanonymizer",
+        DataReconstructionPrivacyResource(
+            challenge_obj=challenge_obj,
+            # TODO: Change this to a serious submitter
+            evaluation_submitter=_demo_deanonymizer_submitter,
+        ),
+    )
+
+    return app
