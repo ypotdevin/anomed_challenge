@@ -246,6 +246,16 @@ def test_tabular_data_reconstruction_challenge_server_factory(
         expected_evaluation=dict(truth=42),
     )
 
+    _check_utility(
+        data_reconstruction_client,
+        mocker,
+        route="/utility/deanonymizer",
+        headers=None,
+        body=utils.dataframe_to_bytes(example_float_df),
+        expected_status_code=201,
+        expected_evaluation=dict(half_truth=21),
+    )
+
 
 def _serialize_anonymized_data(
     anon_data: pd.DataFrame, anon_scheme: challenge.AnonymizationScheme
