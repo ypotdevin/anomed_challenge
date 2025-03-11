@@ -1,6 +1,7 @@
 import tempfile
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import anomed_challenge as challenge
@@ -268,3 +269,31 @@ def test_failing_create_membership_inference_evaluation_data(
             deanonymizer="example-deanonymizer",
             data_split="tuning",
         )
+
+
+@pytest.fixture()
+def example_float_df():
+    return pd.DataFrame(data=np.arange(10, dtype=float))
+
+
+@pytest.fixture()
+def example_int_df():
+    return pd.DataFrame(data=np.arange(start=10, stop=20, dtype=int))
+
+
+def testTabularDataReconstructionChallenge(example_float_df, example_int_df):
+    # TODO
+    chal = challenge.TabularDataReconstructionChallenge(
+        leaky_data=example_float_df,
+        background_knowledge=example_int_df,
+        utility_evaluator=lambda x, y, z: dict(truth=42),
+        privacy_evaluator=lambda x, y: dict(half_truth=21),
+    )
+    assert chal.leaky_data.equals(example_float_df)
+    assert chal.background_knowledge.equals(example_int_df)
+    assert chal.evaluate_utility(example_float_df, "same", example_int_df) == dict(
+        truth=42
+    )
+    assert chal.evaluate_privacy(example_float_df, example_int_df) == dict(
+        half_truth=21
+    )

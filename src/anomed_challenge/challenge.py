@@ -22,7 +22,7 @@ __all__ = [
     "NumpyDataset",
     "strict_binary_accuracy",
     "SupervisedLearningMIAChallenge",
-    "TabularDataResconstructionChallenge",
+    "TabularDataReconstructionChallenge",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -658,7 +658,7 @@ AnonymizationScheme: TypeAlias = Literal["same", "generalization", "microaggrega
 """
 
 
-class TabularDataResconstructionChallenge:
+class TabularDataReconstructionChallenge:
     """This class represents challenges that aim to protect tabular data via
     anonymization, while maintaining certain utility. The threat model involves
     attackers that aim to reconstruct the tabular data from the anonymized data
@@ -698,8 +698,8 @@ class TabularDataResconstructionChallenge:
 
             This function parameter is used, when `evaluate_privacy` is called.
         """
-        self._leaky_data = leaky_data
-        self._background_knowledge = background_knowledge
+        self.leaky_data = leaky_data
+        self.background_knowledge = background_knowledge
         self._evaluate_utility = utility_evaluator
         self._evaluate_privacy = privacy_evaluator
 
