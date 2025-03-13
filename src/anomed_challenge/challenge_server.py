@@ -306,9 +306,8 @@ class StaticDataFrameResource:
     """A static pandas `DataFrame` resource, responding to GET requests.
 
     The `DataFrame` (features and targets) will be serialized using
-    `anomed_utils.named_ndarrays_to_bytes` and may be de-serialized using
-    `anomed_utils.bytes_to_named_ndarrays`. The names of the arrays are 'X' for
-    the features and 'y' for the targets."""
+    `anomed_utils.dataframe_to_bytes` and may be de-serialized using
+    `anomed_utils.bytes_to_dataframe`."""
 
     def __init__(
         self,
