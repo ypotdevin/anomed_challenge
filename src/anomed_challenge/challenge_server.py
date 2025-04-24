@@ -33,6 +33,8 @@ __all__ = [
     "UtilityResource",
 ]
 
+CHALLENGE_ID = os.getenv("CHALLENGE_ID")
+
 
 class StaticJSONResource:
     """Any JSON serializable object, representing a "static" resource (i.e. a
@@ -273,23 +275,27 @@ def supervised_learning_MIA_challenge_server_factory(
     return app
 
 
-def anonymizer_evaluation_submitter(req, evaluation) -> None:
+def anonymizer_evaluation_submitter(
+    req: falcon.Request, evaluation: dict[str, float]
+) -> None:
     json_payload = dict(
         **evaluation,
-        challenge=os.getenv("CHALLENGE_HOST"),
-        anonymizer=os.getenv("ANONYMIZER_ID"),
+        challenge=CHALLENGE_ID,
+        anonymizer=req.get_param(name="anonymizer", required=True),
     )
     _evaluation_submitter(
         json_payload, route="/submissions/anonymizer-evaluation-results"
     )
 
 
-def deanonymizer_evaluation_submitter(req, evaluation) -> None:
+def deanonymizer_evaluation_submitter(
+    req: falcon.Request, evaluation: dict[str, float]
+) -> None:
     json_payload = dict(
         **evaluation,
-        challenge=os.getenv("CHALLENGE_HOST"),
-        anonymizer=os.getenv("ANONYMIZER_ID"),
-        deanonymizer=os.getenv("DEANONYMIZER_ID"),
+        challenge=CHALLENGE_ID,
+        anonymizer=req.get_param(name="anonymizer", required=True),
+        deanonymizer=req.get_param(name="deanonymizer", required=True),
     )
     _evaluation_submitter(
         json_payload, route="/submissions/deanonymizer-evaluation-results"
@@ -414,7 +420,6 @@ def tabular_data_reconstruction_challenge_server_factory(
         "/utility/anonymizer",
         DataReconstructionUtilityResource(
             challenge_obj=challenge_obj,
-            # TODO: Change this to a serious submitter
             evaluation_submitter=anonymizer_evaluation_submitter,
         ),
     )
@@ -422,7 +427,6 @@ def tabular_data_reconstruction_challenge_server_factory(
         "/utility/deanonymizer",
         DataReconstructionPrivacyResource(
             challenge_obj=challenge_obj,
-            # TODO: Change this to a serious submitter
             evaluation_submitter=deanonymizer_evaluation_submitter,
         ),
     )
