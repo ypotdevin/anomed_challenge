@@ -255,8 +255,7 @@ def supervised_learning_MIA_challenge_server_factory(
             if req.get_param("data_split", required=True) == "tuning"
             else challenge_obj.validation_data.get()[1],
             evaluator=challenge_obj.evaluate_anonymizer,
-            # TODO: Change this to a serious submitter
-            submitter=_demo_anonymizer_submitter,
+            submitter=anonymizer_evaluation_submitter,
         ),
     )
     app.add_route(
@@ -268,38 +267,39 @@ def supervised_learning_MIA_challenge_server_factory(
                 data_split=req.get_param("data_split", required=True),  # type: ignore
             )[1],
             evaluator=challenge_obj.evaluate_membership_inference_attack,
-            # TODO: Change this to a serious submitter
-            submitter=_demo_deanonymizer_submitter,
+            submitter=deanonymizer_evaluation_submitter,
         ),
     )
     return app
 
 
-def _demo_anonymizer_submitter(req, evaluation) -> None:
-    anomed_hostname = os.getenv("ANOMED_HOST")
-    url = f"http://{anomed_hostname}/submissions/anonymizer-evaluation-results"
-    demo_evaluation = {
-        "secret": "",
-        "anonymizer": "example-anonymizer",
-        "mae": 0.5,
-        "rmse": 0.5,
-        "coeff_determ": 0.5,
-        "accuracy": 0.5,
-        "auc": 0.5,
-    }
-    requests.post(url=url, json=demo_evaluation)
+def anonymizer_evaluation_submitter(req, evaluation) -> None:
+    json_payload = dict(
+        **evaluation,
+        challenge=os.getenv("CHALLENGE_HOST"),
+        anonymizer=os.getenv("ANONYMIZER_ID"),
+    )
+    _evaluation_submitter(
+        json_payload, route="/submissions/anonymizer-evaluation-results"
+    )
 
 
-def _demo_deanonymizer_submitter(req, evaluation) -> None:
+def deanonymizer_evaluation_submitter(req, evaluation) -> None:
+    json_payload = dict(
+        **evaluation,
+        challenge=os.getenv("CHALLENGE_HOST"),
+        anonymizer=os.getenv("ANONYMIZER_ID"),
+        deanonymizer=os.getenv("DEANONYMIZER_ID"),
+    )
+    _evaluation_submitter(
+        json_payload, route="/submissions/deanonymizer-evaluation-results"
+    )
+
+
+def _evaluation_submitter(json_payload: dict[str, Any], route: str) -> None:
     anomed_hostname = os.getenv("ANOMED_HOST")
-    url = f"http://{anomed_hostname}/submissions/deanonymizer-evaluation-results"
-    demo_evaluation = {
-        "secret": "",
-        "deanonymizer": "example-deanonymizer",
-        "fpr": 0.5,
-        "tpr": 0.5,
-    }
-    requests.post(url=url, json=demo_evaluation)
+    url = f"http://{anomed_hostname}{route}"
+    requests.post(url=url, json=json_payload)
 
 
 class StaticDataFrameResource:
@@ -415,7 +415,7 @@ def tabular_data_reconstruction_challenge_server_factory(
         DataReconstructionUtilityResource(
             challenge_obj=challenge_obj,
             # TODO: Change this to a serious submitter
-            evaluation_submitter=_demo_anonymizer_submitter,
+            evaluation_submitter=anonymizer_evaluation_submitter,
         ),
     )
     app.add_route(
@@ -423,7 +423,7 @@ def tabular_data_reconstruction_challenge_server_factory(
         DataReconstructionPrivacyResource(
             challenge_obj=challenge_obj,
             # TODO: Change this to a serious submitter
-            evaluation_submitter=_demo_deanonymizer_submitter,
+            evaluation_submitter=deanonymizer_evaluation_submitter,
         ),
     )
 
